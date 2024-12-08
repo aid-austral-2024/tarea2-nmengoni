@@ -26,13 +26,17 @@ Este proyecto fue realizado utilizando R, un lenguaje de programación y entorno
 - scales, ggrepel: Para mejorar la visualización y el etiquetado en gráficos.
 
 ## Uso
-El análisis se centra en la automatización de un proceso manual que actualmente se realiza en el ambiente laboral. Con el uso de este análisis, se ha logrado optimizar el proceso de limpieza y transformación de los datos, reduciendo tiempos y mejorando la precisión de los resultados.
+El análisis se centra en la automatización de un proceso manual que actualmente se realiza en el ambiente laboral. Con el uso de este análisis, se busca lograr optimizar el proceso de limpieza y transformación de los datos, reduciendo tiempos y mejorando la precisión de los resultados.
 El trabajo se realiza en dos fases principales:
+
 **Análisis Exploratorio de Datos (EDA):**
-Identificación de tendencias y relaciones clave en el mercado, que sirven como base para la toma de decisiones.
-**Análisis Ad Hoc:**
+Identificación de tendencias y relaciones clave en el mercado, que sirven como base para la toma de decisiones 
+
+**Análisis Ad Hoc:** (en proceso)
 Responde a preguntas específicas sobre el comportamiento del mercado y las estrategias de precios, proporcionando insights más detallados que guían las decisiones estratégicas de la empresa.
-*Nota: Este análisis tiene en cuenta la confidencialidad de los datos, por lo que los archivos han sido modificados y filtrados para cumplir con las normativas de privacidad y seguridad.*
+Una vez aprobado el EDA, procederé con la etapa del análisis Ad hod
+*Nota 1: Este análisis tiene en cuenta la confidencialidad de los datos, por lo que los archivos han sido modificados y filtrados para cumplir con las normativas de privacidad y seguridad.*
+*Nota 2: Debido al peso y la cantidad de archivos, solo se tomó una muestra representativa de los archivos necesarios para el análisis, ya que no era posible cargar todos en GitHub.*
 
 ## Contribución
 Este repositorio está abierto a comentarios y mejoras. Se aceptan contribuciones de usuarios que deseen sugerir optimización de procesos o aportar nuevas ideas. 
