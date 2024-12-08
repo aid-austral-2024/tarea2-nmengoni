@@ -10,6 +10,7 @@ En esta fase se identifican tendencias y relaciones clave en el mercado, que sir
 
 **Análisis Ad Hoc:** (en proceso)
 Esta fase responde a preguntas específicas sobre el comportamiento del mercado y las estrategias de precios, proporcionando insights detallados que guían las decisiones estratégicas de la empresa.
+
 *Nota 1: Una vez aprobado el EDA, se avanzara en la nueva etapa.*
 
 ## Fuente de Datos
@@ -36,6 +37,7 @@ Este proyecto fue realizado utilizando R, un lenguaje de programación y entorno
 El objetivo de este análisis es optimizar el tiempo de los analistas, permitiéndoles enfocarse en tareas estratégicas y no en el trabajo operativo. Esto se logra mediante la automatización de un proceso manual que actualmente forma parte del flujo laboral. Al automatizar las etapas de limpieza y transformación de los datos, se busca no solo reducir significativamente los tiempos de procesamiento, sino también mejorar la precisión y eficiencia de los resultados. De este modo, los analistas pueden centrarse en la interpretación de los datos y en la toma de decisiones más informadas y basadas en insights precisos.
 
 *Nota 2: Este análisis tiene en cuenta la confidencialidad de los datos, por lo que los archivos han sido modificados y filtrados para cumplir con las normativas de privacidad y seguridad.*
+
 *Nota 3: Debido al peso y la cantidad de archivos, solo se tomó una muestra representativa de los archivos necesarios para el análisis, ya que no era posible cargar todos en GitHub.*
 
 ## Contribución
