@@ -35,10 +35,4 @@ Responde a preguntas específicas sobre el comportamiento del mercado y las estr
 *Nota: Este análisis tiene en cuenta la confidencialidad de los datos, por lo que los archivos han sido modificados y filtrados para cumplir con las normativas de privacidad y seguridad.*
 
 ## Contribución
-Este repositorio está abierto a comentarios y mejoras. Se aceptan contribuciones de usuarios que deseen sugerir optimización de procesos o aportar nuevas ideas. Si deseas contribuir:
-Haz un fork de este repositorio.
-- Crea una nueva rama (git checkout -b nombre-de-tu-rama).
-- Realiza tus cambios y haz un commit (git commit -am 'Descripción de los cambios').
-- Haz push a la rama (git push origin nombre-de-tu-rama).
-- Abre un pull request para integrar tus cambios.
-Este proyecto está en constante mejora y cualquier aporte será bienvenido.
+Este repositorio está abierto a comentarios y mejoras. Se aceptan contribuciones de usuarios que deseen sugerir optimización de procesos o aportar nuevas ideas. 
