@@ -2,8 +2,15 @@
 **Maestría en Ciencias de Datos - AUSTRAL**
 
 ## Descripción
-El objetivo de este desarrollo es optimizar el tiempo dedicado a la limpieza y procesamiento de datos de importación provenientes de Mercosur Online. A través de este proceso, se facilita un análisis inteligente del mercado de productos de diagnóstico de laboratorio, con el fin de evaluar la demanda, identificar patrones de competencia y tomar decisiones estratégicas informadas sobre precios y posicionamiento. Este enfoque busca mejorar los procesos laborales, transformando tareas manuales en flujos automáticos más eficientes.
-Mediante un proceso de estructuración de datos desorganizados, se logran generar insights clave que optimizan las decisiones empresariales.
+El objetivo de este desarrollo es optimizar el tiempo dedicado a la limpieza y procesamiento de los datos provenientes de Mercosur Online. A través de la automatización de estos procesos, se facilita un análisis inteligente del mercado de productos de diagnóstico de laboratorio, lo que permite evaluar la demanda, identificar patrones de competencia y tomar decisiones estratégicas más informadas sobre precios y posicionamiento.
+El enfoque principal de este desarrollo es mejorar los procesos laborales, transformando tareas manuales en flujos automáticos más eficientes. El trabajo se lleva a cabo en dos fases principales:
+
+**Análisis Exploratorio de Datos (EDA):**
+En esta fase se identifican tendencias y relaciones clave en el mercado, que sirven como base sólida para la toma de decisiones estratégicas.
+
+**Análisis Ad Hoc:** (en proceso)
+Esta fase responde a preguntas específicas sobre el comportamiento del mercado y las estrategias de precios, proporcionando insights detallados que guían las decisiones estratégicas de la empresa.
+*Nota 1: Una vez aprobado el EDA, se avanzara en la nueva etapa.*
 
 ## Fuente de Datos
 Los datos utilizados en este análisis provienen de la plataforma Mercosur Online, una fuente confiable que proporciona información detallada sobre las importaciones. 
@@ -26,17 +33,10 @@ Este proyecto fue realizado utilizando R, un lenguaje de programación y entorno
 - scales, ggrepel: Para mejorar la visualización y el etiquetado en gráficos.
 
 ## Uso
-El análisis se centra en la automatización de un proceso manual que actualmente se realiza en el ambiente laboral. Con el uso de este análisis, se busca lograr optimizar el proceso de limpieza y transformación de los datos, reduciendo tiempos y mejorando la precisión de los resultados.
-El trabajo se realiza en dos fases principales:
+El objetivo de este análisis es optimizar el tiempo de los analistas, permitiéndoles enfocarse en tareas estratégicas y no en el trabajo operativo. Esto se logra mediante la automatización de un proceso manual que actualmente forma parte del flujo laboral. Al automatizar las etapas de limpieza y transformación de los datos, se busca no solo reducir significativamente los tiempos de procesamiento, sino también mejorar la precisión y eficiencia de los resultados. De este modo, los analistas pueden centrarse en la interpretación de los datos y en la toma de decisiones más informadas y basadas en insights precisos.
 
-**Análisis Exploratorio de Datos (EDA):**
-Identificación de tendencias y relaciones clave en el mercado, que sirven como base para la toma de decisiones 
-
-**Análisis Ad Hoc:** (en proceso)
-Responde a preguntas específicas sobre el comportamiento del mercado y las estrategias de precios, proporcionando insights más detallados que guían las decisiones estratégicas de la empresa.
-Una vez aprobado el EDA, procederé con la etapa del análisis Ad hod
-*Nota 1: Este análisis tiene en cuenta la confidencialidad de los datos, por lo que los archivos han sido modificados y filtrados para cumplir con las normativas de privacidad y seguridad.*
-*Nota 2: Debido al peso y la cantidad de archivos, solo se tomó una muestra representativa de los archivos necesarios para el análisis, ya que no era posible cargar todos en GitHub.*
+*Nota 2: Este análisis tiene en cuenta la confidencialidad de los datos, por lo que los archivos han sido modificados y filtrados para cumplir con las normativas de privacidad y seguridad.*
+*Nota 3: Debido al peso y la cantidad de archivos, solo se tomó una muestra representativa de los archivos necesarios para el análisis, ya que no era posible cargar todos en GitHub.*
 
 ## Contribución
 Este repositorio está abierto a comentarios y mejoras. Se aceptan contribuciones de usuarios que deseen sugerir optimización de procesos o aportar nuevas ideas. 
