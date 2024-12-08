@@ -1,5 +1,5 @@
 ---
-title: "Análisis de Mercado: País XXX"
+title: "Análisis de Mercado: Ecuador"
 subtitle: "TP 2: Análisis Inteligente de Datos"
 author: "Noelia Mengoni"
 date: today 
