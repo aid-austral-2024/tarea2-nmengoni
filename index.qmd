@@ -102,3 +102,539 @@ table(info_datos$extension) %>%
     position = "center"
   )
 ```
+Esto permite verificar que todos los archivos descargados han sido incorporados al análisis y que sus extensiones son las adecuadas para su procesamiento.
+
+## Lectura y limpieza
+
+Se implementó una función para consolidar y visualizar de manera integral todos los archivos almacenados en la carpeta, garantizando un enfoque unificado para su análisis.
+```{r}
+# Función para leer y procesar archivos Excel
+leer_detalle_excel <- function(archivo) {
+  # Leer la primera hoja del archivo Excel
+  df <- read_excel(archivo, sheet = 1)
+  return(df)
+}
+
+# Leer y combinar todos los archivos Excel
+dataset_mol <- map_dfr(datos, leer_detalle_excel)
+
+# Obtener nombres de columnas y tipos de datos
+tabla_detalle <- tibble(
+  Columna = names(dataset_mol),
+  `Tipo de Dato` = sapply(dataset_mol, class) %>% sapply(paste, collapse = ", ")
+)
+#Crear tabla
+tabla_detalle %>%
+  kable(
+    format = "html",
+    col.names = c("Descripción", "Tipo de Datos"),
+    caption = "Tabla 2: Estructura del Dataset"
+  ) %>%
+  kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = FALSE,
+    position = "center"
+  ) %>%
+  scroll_box(width = "100%", height = "300px")  
+```
+
+## Organización y Formato de los Datos
+
+Se realiza la limpieza y estructuración de los datos, consolidando la información, seleccionando columnas relevantes y asegurando el formato correcto.
+```{r}
+# VARIABLES: Año y Mes
+#Se desarrolló una función que permite derivar las variables Año y Mes 
+#a partir de los valores contenidos en la columna Fecha, facilitando la #organización y análisis temporal de los datos.
+
+# Formatear la columna Fecha y crear Año y Mes
+dataset_mol$Fecha <- as.Date(dataset_mol$Fecha, format = "%Y-%m-%d")
+
+# Formatear la columna Fecha y crear Año y Mes
+dataset_mol$Fecha <- as.Date(dataset_mol$Fecha, format = "%Y-%m-%d")
+dataset_mol$Año <- format(dataset_mol$Fecha, "%Y")
+dataset_mol$Mes <- format(dataset_mol$Fecha, "%m")
+
+# Crear un subconjunto de datos
+subset_mol <- dataset_mol %>%
+  select(
+    Fecha, Año, Mes, `Código HS`, `Descripción Arancelaria`, Cantidad,
+    `Descripción Comercial`, `Valor Unitario FOB (USD)`, `Valor FOB (USD)`,
+    Importador, Marca, `Descripción Arancelaria Completa`, Modelo
+  )
+
+# Convertir columnas relevantes a numéricas
+subset_mol <- subset_mol %>%
+  mutate(
+    Cantidad = as.numeric(Cantidad),
+    `Valor Unitario FOB (USD)` = as.numeric(`Valor Unitario FOB (USD)`),
+    `Valor FOB (USD)` = as.numeric(`Valor FOB (USD)`)
+  )
+
+# VARIABLE: Tipo de producto
+#Se incorporó una nueva columna al dataset con el objetivo de 
+#clasificar las importaciones en las categorías Equipos, Reactivos y 
+#Otros, permitiendo un análisis más segmentado y específico de los 
+#datos.
+
+subset_mol <- subset_mol %>%
+  mutate(
+    Tipo_Producto = case_when(
+      str_starts(as.character(`Código HS`), "3822") ~ "REACTIVOS",
+      str_starts(as.character(`Código HS`), "3002") ~ "REACTIVOS",
+      str_starts(as.character(`Código HS`), "902730") ~ "EQUIPOS",
+      str_starts(as.character(`Código HS`), "902750") ~ "EQUIPOS",
+      str_starts(as.character(`Código HS`), "902780") ~ "EQUIPOS",
+      str_starts(as.character(`Código HS`), "902789") ~ "EQUIPOS",
+      str_starts(as.character(`Código HS`), "902790") ~ "EQUIPOS",
+      TRUE ~ "OTROS"
+    )
+  )
+
+# Verificar los primeros 10 registros
+kable(head(subset_mol, 10), format = "html", caption = "Tabla 3: Nueva estructura del Dataset") %>%
+  kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = FALSE,
+    position = "center"
+  ) %>%
+  scroll_box(height = "200px") 
+```
+
+## Revisión de Integridad de Datos
+
+Se realiza una evaluación de las columnas para identificar datos faltantes. 
+```{r}
+# Verificar datos faltantes en todas las columnas del dataset
+faltantes_resumen <- subset_mol %>%
+  summarise(across(everything(), ~ sum(is.na(.)), .names = "{col}")) %>%
+  pivot_longer(cols = everything(), names_to = "Nombre Columna", values_to = "Faltantes") %>%
+  filter(Faltantes > 0) %>% 
+  arrange(desc(Faltantes))
+
+# Crear una tabla
+faltantes_resumen %>%
+  kable(
+    format = "html",
+    col.names = c("Nombre Columna", "Faltantes"),
+    caption = "Tabla 4: Resumen de Datos Faltantes"
+  ) %>%
+  kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = FALSE,
+    position = "center"
+  )
+```
+::: callout-note
+*Evaluar el impacto de los datos faltantes en el conjunto de datos. Con base en los resultados obtenidos, se define la estrategia más adecuada para su tratamiento.*
+:::
+
+
+# Análisis de las Importaciones del Mercado Objetivo
+
+## Evolución Anual 
+Se analiza el flujo anual de importaciones del país para evaluar la competencia en el mercado.
+```{r}
+# Extraer los años del dataset
+años_disponibles <- unique(subset_mol$Año)
+
+# Agrupar datos por Año
+datos_filtrados <- subset_mol %>%
+  group_by(Año) %>%  
+  summarise(Total_Importaciones = sum(`Valor FOB (USD)`, na.rm = TRUE)) %>%
+  ungroup()  
+
+# Crear tabla de resumen
+tabla_resumen <- datos_filtrados %>%
+  mutate(Total_Importaciones = scales::dollar(Total_Importaciones)) %>%
+  kable(
+    format = "html",
+    col.names = c("Año", "Total Importaciones (USD)"),
+    caption = "Tabla 5: Importaciones Totales por Año"
+  ) %>%
+  kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = FALSE,
+    position = "center"
+  )
+
+# Mostrar la tabla
+tabla_resumen
+
+#Gráfico
+ggplot(datos_filtrados, aes(x = factor(Año), y = Total_Importaciones, fill = factor(Año))) +
+  geom_bar(stat = "identity", show.legend = FALSE, width = 0.6) +  
+  geom_text(
+    aes(label = scales::dollar(Total_Importaciones)),
+    vjust = -0.5, size = 4.5, fontface = "bold", color = "black"
+  ) +  
+  labs(
+    title = "Gráfico 1: Evolución de Importaciones por Año (USD)",
+    x = "Año",
+    y = NULL 
+  ) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +  
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 14, vjust = 1),
+    axis.text.x = element_text(angle = 0, hjust = 0.5, size = 10),
+    axis.text.y = element_blank(),  # Ocultar etiquetas en el eje Y
+    plot.margin = margin(t = 10, r = 15, b = 10, l = 15),
+    panel.grid.major = element_blank(), 
+    panel.grid.minor = element_blank(), 
+    panel.background = element_blank(), 
+    plot.background = element_blank() 
+  ) +
+  coord_cartesian(clip = "off")  # Evitar recorte del texto
+```
+
+### Proyección anual
+Se estima el comportamiento futuro de las importaciones basado en el promedio de los meses observados.
+```{r}
+subset_mol <- subset_mol %>%
+  mutate(Mes = as.numeric(Mes))  
+
+# Calcular ventas totales por mes y año
+datos_por_mes <- subset_mol %>%
+  group_by(Año, Mes) %>% 
+  summarise(
+    Total_Importaciones = sum(`Valor FOB (USD)`, na.rm = TRUE)
+  ) %>%
+  mutate(
+    Mes = factor(Mes, levels = 1:12, labels = c(
+      "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+    ))
+  )
+
+# Crear tabla de resumen con los resultados
+tabla_por_mes <- datos_por_mes %>%
+  mutate(Total_Importaciones = scales::dollar(Total_Importaciones)) %>%
+  arrange(Año, Mes) %>%
+  kable(
+    format = "html",
+    col.names = c("Año", "Mes", "Total Importaciones (USD)"),
+    caption = "*Tabla: Importaciones Totales por Mes" #no se muestra
+  ) %>%
+  kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = FALSE,
+    position = "center"
+  )
+# Calcular ventas totales por año con proyección anual
+datos_filtrados <- subset_mol %>%
+  group_by(Año) %>%
+  summarise(
+    Meses_Disponibles = n_distinct(Mes),  # Meses únicos disponibles
+    Total_Importaciones = sum(`Valor FOB (USD)`, na.rm = TRUE), 
+    Proyectado_Anual = if_else(
+      Meses_Disponibles < 12 & Meses_Disponibles > 0,  
+      Total_Importaciones / Meses_Disponibles * 12,  # Calcular proyección
+      Total_Importaciones  # Si hay 12 meses, no se proyecta
+    )
+  )
+
+# Tabla de resumen con los resultados
+tabla_resumen <- datos_filtrados %>%
+  mutate(
+    Total_Importaciones = scales::dollar(Total_Importaciones),
+    Proyectado_Anual = scales::dollar(Proyectado_Anual)
+  ) %>%
+  kable(
+    format = "html",
+    col.names = c("Año", "Meses Disponibles", "Total Observado (USD)", "Proyectado Anual (USD)"),
+    caption = "*Tabla 6: Importaciones Totales y Proyección Anual por Año"
+  ) %>%
+  kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = FALSE,
+    position = "center"
+  )
+
+# Mostrar tabla
+tabla_resumen
+```
+
+## Segmentación por tipo de producto
+Se evalúa la evolución de cada tipo de producto en los años analizados, destacando variaciones en montos totales y participaciones relativas dentro del mercado.
+```{r}
+tabla_tipo_producto_anual <- subset_mol %>%
+  group_by(Año, Tipo_Producto) %>%
+  summarise(Monto_Importado_Total = sum(`Valor FOB (USD)`, na.rm = TRUE), .groups = "drop") %>%
+  group_by(Año) %>%
+  mutate(Participacion = (Monto_Importado_Total / sum(Monto_Importado_Total, na.rm = TRUE)) * 100)
+
+# Mostrar la tabla
+tabla_tipo_producto_anual %>%
+  arrange(Año, desc(Monto_Importado_Total)) %>%
+  mutate(
+    Monto_Importado_Total = scales::comma(Monto_Importado_Total, accuracy = 1),  
+    Participacion = paste0(format(round(Participacion, 2), nsmall = 2))    
+  ) %>%
+  kable(
+    format = "html",
+    col.names = c("Año", "Categorías de Producto", "Monto Total Importado (USD)", "Participación (%)"),
+    caption = "Tabla 7: Importaciones por Año y Tipo de Producto"
+  ) %>%
+  kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = FALSE,
+    position = "center"
+  )
+```
+```{r}
+# Crear gráficos de torta por cada año
+ggplot(tabla_tipo_producto_anual, aes(x = "", y = Participacion, fill = Tipo_Producto)) +
+  geom_bar(stat = "identity", width = 1) +
+  coord_polar(theta = "y") +
+  facet_wrap(~ Año) +  # Crear un gráfico por cada año
+  geom_text(
+    aes(label = paste0(round(Participacion, 1), "%")),
+    position = position_stack(vjust = 0.5),
+    size = 3,
+    fontface = "bold"  
+  ) +
+  labs(
+    title = "Gráfico 2: Importaciones por Tipo de Producto (por Año)",
+    x = NULL,
+    y = NULL,
+    fill = "Tipo de Producto"
+  ) +
+  scale_fill_brewer(palette = "Set3") +
+  theme_void() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 14), 
+    strip.text = element_text(size = 12, face = "bold")   
+  )
+```
+
+### Reactivos
+Análisis del comportamiento del segmento de Reactivos.
+```{r}
+# Calcular monto total por importador, tipo de producto y año
+tabla_importador_producto_año <- subset_mol %>%
+  group_by(Importador, Tipo_Producto, Año) %>%
+  summarise(
+    Monto_Importado = sum(`Valor FOB (USD)`, na.rm = TRUE), 
+    .groups = "drop"
+  ) %>%
+  distinct()
+
+años_disponibles <- unique(tabla_importador_producto_año$Año)
+
+# Reestructurar la tabla
+tabla_importador_producto <- tabla_importador_producto_año %>%
+  pivot_wider(
+    names_from = Año, 
+    values_from = Monto_Importado, 
+    names_prefix = "Monto_"
+  ) %>%
+  mutate(
+    Total_Importado = rowSums(across(starts_with("Monto_")), na.rm = TRUE)
+  ) %>%
+  arrange(desc(Total_Importado))
+
+# Filtrar para obtener solo los datos de "REACTIVOS"
+tabla_reactivos <- tabla_importador_producto %>%
+  filter(Tipo_Producto == "REACTIVOS")
+
+# Generar la tabla para Reactivos 
+tabla_reactivos %>%
+  mutate(
+    across(starts_with("Monto_"), ~scales::number(., big.mark = ",", decimal.mark = ".", accuracy = 1, scale = 1)), 
+    Total_Importado = scales::number(Total_Importado, big.mark = ",", decimal.mark = ".", accuracy = 1, scale = 1)  
+  ) %>%
+  kable(
+    format = "html",
+    col.names = c("Importador", "Tipo de Producto", paste0("Monto ", años_disponibles, " (USD)"), "Total Importado (USD)"),
+    caption = "Tabla 8: Importaciones de Reactivos por Importador y Año"
+  ) %>%
+  kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = FALSE,
+    position = "center"
+  ) %>%
+  scroll_box(width = "100%", height = "400px")
+```
+
+### Equipos
+Evaluación del comportamiento del segmento de Equipos.
+```{r}
+# Tabla de Equipos
+tabla_equipos <- tabla_importador_producto %>%
+  filter(Tipo_Producto == "EQUIPOS")
+
+tabla_equipos %>%
+  mutate(
+    across(starts_with("Monto_"), ~scales::number(., big.mark = ",", decimal.mark = ".", accuracy = 1, scale = 1)), 
+    Total_Importado = scales::number(Total_Importado, big.mark = ",", decimal.mark = ".", accuracy = 1, scale = 1)  # Total sin decimales
+  ) %>%
+  kable(
+    format = "html",
+    col.names = c("Importador", "Tipo de Producto", paste0("Monto ", años_disponibles, " (USD)"), "Total Importado (USD)"),
+    caption = "Tabla 9: Importaciones de Equipos por Importador y Año"
+  ) %>%
+  kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = FALSE,
+    position = "center"
+  ) %>%
+  scroll_box(width = "100%", height = "400px")
+```
+::: callout-note
+*El segmento de "OTROS" no será analizado, ya que su participación en el mercado es mínima y no tiene un impacto relevante en los resultados del análisis.*
+:::
+
+## Importadores
+El análisis se enfocará en el comportamiento global de los importadores, evaluando su participación en el mercado, las variaciones en las cantidades importadas y cómo estas dinámicas evolucionan a lo largo de los años.
+
+### Total de Importadores 
+Se incluirán todos los años del conjunto de datos para calcular el total de importadores, sin realizar segmentaciones por períodos específicos.
+
+```{r}
+# Asegurarse de que la columna Importador es de tipo carácter
+subset_mol <- subset_mol %>%
+  mutate(Importador = as.character(Importador))
+ 
+# Calcular el total de ventas
+total_ventas <- sum(dataset_mol$`Valor FOB (USD)`, na.rm = TRUE)
+
+# Crear la tabla de resumen por importador
+tabla_importadores <- dataset_mol %>%
+  group_by(Importador) %>%
+  summarise(
+    Monto_Importado_Total = sum(`Valor FOB (USD)`, na.rm = TRUE)
+  ) %>%
+  arrange(desc(Monto_Importado_Total)) %>%
+  mutate(
+    Participacion = (Monto_Importado_Total / total_ventas) * 100,  
+    Monto_Importado_Total = scales::dollar(Monto_Importado_Total),  
+    Participacion = round(Participacion, 2) 
+  )
+
+# Tabla
+tabla_importadores %>%
+  kable(
+    format = "html",
+    col.names = c("Importador", "Monto Total Importado (USD)", "Participación (%)"),
+    caption = "Tabla 10: Informe por Importador"
+  ) %>%
+  kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = FALSE,
+    position = "center"
+  ) %>%
+  scroll_box(width = "100%", height = "400px")
+```
+
+### Importaciones por Año
+Se presentará los datos de evolución de las importaciones de los 10 principales importadores por cada año analizado.
+```{r}
+# Calcular el total de ventas por año
+total_ventas_por_año <- subset_mol %>% 
+  group_by(Año) %>% 
+  summarise(
+    Total_Ventas_Año = sum(`Valor FOB (USD)`, na.rm = TRUE)
+  )
+
+tabla_importador_año <- subset_mol %>%
+  group_by(Año, Importador) %>%  
+  summarise(
+    Monto_Importado_Total = sum(`Valor FOB (USD)`, na.rm = TRUE)
+  ) %>%
+  left_join(total_ventas_por_año, by = "Año") %>% 
+  mutate(
+    Participacion = (Monto_Importado_Total / Total_Ventas_Año) * 100 
+  ) %>%
+  arrange(Año, Importador, desc(Monto_Importado_Total))  
+
+# Obtener los 10 principales importadores
+tabla_top10_importadores <- tabla_importador_año %>%
+  slice_max(order_by = Monto_Importado_Total, n = 10)
+
+# Tabla
+tabla_top10_importadores %>%
+  select(Año, Importador, Monto_Importado_Total, Participacion) %>%
+  mutate(
+    Monto_Importado_Total = number(Monto_Importado_Total, big.mark = ",", accuracy = 0.01),
+    Participacion = round(Participacion, 2)
+  ) %>%
+  kable(
+    format = "html",
+    col.names = c("Año", "Importador", "Monto Importado Total (USD)", "Participación (%)"),
+    caption = "Tabla 11: Top 10 Importadores por Año"
+  ) %>%
+  kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = FALSE,
+    position = "center"
+  ) %>%
+  scroll_box(width = "100%", height = "400px")
+
+```
+
+## Competidores directos
+Se proporcionará un análisis detallado de las empresas que comercializan los mismos equipos que `Wiener Lab`, identificando a aquellos competidores que operan en el mismo segmento de mercado.
+```{r}
+# Filtrar los datos por la marca "MINDRAY" y agrupar por importador
+tabla_importadores_mindray <- subset_mol %>%
+  filter(Marca == "MINDRAY") %>%  
+  group_by(Importador) %>%
+  summarise(
+    Monto_Importado_Total = sum(`Valor FOB (USD)`, na.rm = TRUE),
+    .groups = "drop"  
+  ) %>%
+  mutate(
+    Participacion = (Monto_Importado_Total / sum(Monto_Importado_Total)) * 100, 
+    Monto_Importado_Total = scales::comma(Monto_Importado_Total, accuracy = 1),  
+    Participacion = scales::percent(Participacion / 100, accuracy = 0.01) 
+  ) %>%
+  arrange(desc(Participacion))  
+
+# Tabla
+tabla_importadores_mindray %>%
+  kable(
+    format = "html",
+    col.names = c("Importadores", "Total Importado (USD)", "Participación (%)"),
+    caption = "*Tabla 12: Importadores de la Marca 'MINDRAY'*"
+  ) %>%
+  kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = FALSE,
+    position = "center"
+  )
+```
+
+## Presencia en el mercado
+Se analizará la participación de `Wiener Lab` en el mercado objetivo, evaluando su cuota de mercado y tendencias de crecimiento.
+```{r}
+# Filtrar los datos por la marca "WIENER" y agrupar por importador
+tabla_importadores_mindray <- subset_mol %>%
+  filter(Marca == "WIENER") %>%  # Filtrar por Marca
+  group_by(Importador) %>%
+  summarise(
+    Monto_Importado_Total = sum(`Valor FOB (USD)`, na.rm = TRUE)  # Sumar el monto FOB
+  ) %>%
+  ungroup() %>%  
+  mutate(
+    Participacion = (Monto_Importado_Total / sum(Monto_Importado_Total)) * 100,  
+    Monto_Importado_Total = comma(Monto_Importado_Total, accuracy = 0.01),  
+    Participacion = percent(Participacion / 100, accuracy = 0.01)
+  ) %>%
+  arrange(desc(Monto_Importado_Total))  
+
+# Table
+tabla_importadores_mindray %>%
+  kable(
+    format = "html",
+    col.names = c("Importador", "Monto Total Importado (USD)", "Participación (%)"),
+    caption = "*Tabla 13: Importadores de la Marca 'WIENER LAB'*"
+  ) %>%
+  kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = FALSE,
+    position = "center"
+  )
+```
+
+::: callout-note
+*Este informe ha sido creado con el objetivo de estandarizar el análisis inicial de importaciones. Dado que se trata de una fase preliminar, no se incluyen conclusiones en este documento, ya que su propósito es ofrecer una visión global y consolidada que sirva como base para los análisis Ad hoc subsecuentes.*
+:::
