@@ -1,0 +1,104 @@
+---
+title: "Análisis de Mercado: País XXX"
+subtitle: "TP 2: Análisis Inteligente de Datos"
+author: "Noelia Mengoni"
+date: today 
+lang: es
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    code-fold: true
+    code-copy: true
+    embed-resources: true
+    highlight-style: zenburn
+    theme: cosmo
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+# Introducción
+
+**Wiener Lab** una empresa argentina líder en la producción y comercialización de reactivos y equipos para diagnóstico de laboratorio, se destaca por su enfoque en América Latina y su alcance global. Su misión es ofrecer soluciones innovadoras y de alta calidad en bioquímica, hematología, inmunología y microbiología.
+
+Su principal valor diferencial radica en la capacidad de transformar datos en ventajas competitivas, lo que les permite optimizar procesos, maximizar el desempeño operativo y fortalecer su posición estratégica en el mercado.
+
+# Objetivo del estudio
+
+El propósito principal es analizar el mercado de productos relacionados con diagnósticos de laboratorio utilizando datos de importación proporcionados por `Mercosur Online`. Este análisis permitirá evaluar el comportamiento del mercado, identificar patrones de demanda y competencia, y tomar decisiones estratégicas sobre precios y posicionamiento de productos.
+
+## Fuente
+
+La fuente principal de información será [MERCOSUR_ONLINE](https://auth.gln.com/identityservice/login?appId=133D7731-7B34-4A89-8005-DECD1979089C&returnUrl=https%3A%2F%2Fwww.myvan.descartes.com%2FWelcome), que proporciona datos clave sobre importaciones, como:
+
+-   Países de origen y destino
+-   Códigos de productos que representan categorías específicas.
+-   Detalles de importación, incluidos cantidades y valores, entre otros.
+
+Dado que los datos descargados (en formatos Excel) suelen estar desorganizados, será necesario un proceso de limpieza y estructuración.
+
+## Alcance
+
+Con los datos organizados, se realizará un análisis exploratorio para generar estadísticas descriptivas y visualizaciones que identifiquen relaciones clave entre las variables. Este paso es crucial para:
+
+- Detectar tendencias y patrones en el mercado.
+- Entender las interrelaciones entre las variables.
+
+El análisis exploratorio constituye la fase inicial del proceso, proporcionando una visión global de los datos. A continuación, se avanzará al análisis ad hoc, donde se abordarán consultas específicas derivadas de este análisis, con el fin de obtener respuestas detalladas que guíen las decisiones estratégicas.
+
+# Procesamiento de Datos
+
+## Bibliotecas
+
+En este análisis se utilizan diversas librerías de R que facilitan la manipulación, procesamiento y visualización de los datos. A continuación, se detallan las principales librerías utilizadas: `readxl`, `readr`, `haven`, `dplyr`,`fs`,`stringr`, `purrr`, `here`,`skimr`, `knitr`,`ggplot2`, `kableExtra`,   `tidyr`, `tools`, `tibble`, `lubridate`, `scales` y `ggrepel`.
+```{r}
+# Lista de librerías a utilizar
+librerias <- c("readxl", "readr", "haven", "dplyr", "fs","stringr", "purrr", "here", "skimr", "knitr", "ggplot2", "kableExtra", "tidyr", "tools", "tibble", "lubridate", "scales", "ggrepel")
+instalar <- librerias[!(librerias %in% installed.packages()[,"Package"])]
+if(length(instalar)) install.packages(instalar)
+invisible(lapply(librerias, library, character.only = TRUE))
+```
+
+## Directorio de trabajo
+
+El primer paso en este análisis consiste en cargar y consolidar todos los archivos descargados desde `Mercosur Online`.
+
+Estos archivos se encuentran almacenados en la carpeta **MERCOSUR_ONLINE**, previamente configurada como el directorio de trabajo.
+
+::: callout-attention
+**¡Atención!** *Es importante tener en cuenta que los archivos se descargan en lotes de hasta 5000 registros (filas), lo que resulta en la generación de múltiples archivos. Esto puede ocasionar que el procesamiento sea más lento debido al volumen de datos.*
+:::
+
+## Validación de Archivos
+
+Se procede a verificar la cantidad de archivos presentes en la carpeta, así como las extensiones correspondientes a cada uno de ellos.
+```{r}
+# Definir la ruta de la carpeta principal
+directorio <- "MERCOSUR_ONLINE"
+
+# Listar todos los archivos dentro de la carpeta, recursivamente
+datos <- list.files(path = directorio, full.names = TRUE, recursive = TRUE)
+
+# Extraer extensiones y crear el data frame
+info_datos <- data.frame(
+  ruta = datos,
+  extension = tools::file_ext(datos)
+)# Verificar la cantidad de archivos guardados y su extensión
+
+# Generar la tabla 
+table(info_datos$extension) %>%
+  as.data.frame() %>%
+  arrange(desc(Freq)) %>%
+  kable(
+    "html",
+    col.names = c("Extensión", "Frecuencia"),
+    caption = "Tabla 1: Estructura del directorio" 
+  ) %>%
+  kable_styling(
+    full_width = FALSE,
+    bootstrap_options = c("striped", "hover"),
+    position = "center"
+  )
+```
